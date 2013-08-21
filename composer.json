@@ -1,0 +1,16 @@
+{
+    "name": "wotek/video-bundle",
+    "description": "Video bundle for Symfony 2",
+    "require": {
+        "guzzle/guzzle": "~3.7"
+    },
+    "require-dev": {
+        "guzzle/guzzle": "~3.7"
+    },
+    "authors": [
+        {
+            "name": "wotek",
+            "email": "wojtek@kropka.net"
+        }
+    ]
+}
