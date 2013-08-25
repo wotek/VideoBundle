@@ -3,22 +3,10 @@ namespace Wtk\VideoBundle\Providers;
 
 use Wtk\VideoBundle\Providers\Provider\AbstractProvider;
 use Wtk\VideoBundle\Providers\Provider\Client\Vimeo as VimeoClient;
+use Symfony\Component\HttpFoundation\File\File;
+use Wtk\VideoBundle\Providers\Provider\Exception as ProviderException;
 
 class Vimeo extends AbstractProvider {
-
-  public function upload($file)
-  {
-    echo "Uploading $file...";
-  }
-
-  /**
-   * @return Wtk\VideoBundle\Providers\Provider\Client\Vimeo
-   */
-  public function getClient()
-  {
-    return new VimeoClient($this->getConfig());
-  }
-
   /**
    * Retrieve data about movie with give id
    *
@@ -27,37 +15,65 @@ class Vimeo extends AbstractProvider {
    */
   public function get($id)
   {
+    return $this->getClient()->getInfo($id);
+  }
+
+  /**
+   * Uploads video to Vimeo
+   *
+   * @param  File $file
+   */
+  public function upload(File $file)
+  {
+    $this->log(
+      sprintf("Uploading file %s ...", $file->getFilename())
+    );
     /**
-     * @var Wtk\VideoBundle\Providers\Provider\Client\Vimeo
+     * 4. Verfiy upload
+     * 5. Complete process -> return video_id
      */
     $client = $this->getClient();
     /**
-     * Lets make GET request
-     * @var RequestInterface
+     * 1. Check user quota
      */
-    $request = $client->get();
+    $this->log("Receiving quota information from API..");
 
-    $params = array(
-      'format' => 'json',
-      'method' => 'vimeo.videos.getInfo',
-      'video_id'  =>  $id
+    $quota = $client->getQuota();
+
+    if($file->getSize() > $freespace = $quota['free'])
+    {
+      throw new ProviderException(
+        "Cannot upload given file. Maximum allowed file size is: $freespace"
+      );
+    }
+    /**
+     * 2. Get an upload ticket
+     */
+    $this->log("Fetching upload ticket");
+
+    $ticket = $client->getTicket();
+
+    $this->log(
+      sprintf("Got ticket: %s", json_encode($ticket))
+    );
+    /**
+     * 3. Transfer video data
+     */
+    $this->log("Starting file upload...");
+    $client->upload(
+      $ticket['endpoint'],
+      $file
     );
 
-    foreach($params as $param => $value)
-    {
-      $request->getQuery()->set($param, $value);
-    }
-
-    $response = $request->send();
-
-    if($response->isSuccessful())
-    {
-      return $response->json();
-    }
-
-    /**
-     * @todo : How to handle failed attempts?
-     */
-    return null;
+    // return $this->getClient()->upload($file);
   }
+
+  /**
+   * @return Wtk\VideoBundle\Providers\Provider\Client\Vimeo
+   */
+  protected function getClient()
+  {
+    return VimeoClient::factory($this->getConfig());
+  }
+
 }

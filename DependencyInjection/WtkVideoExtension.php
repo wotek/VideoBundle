@@ -26,72 +26,20 @@ class WtkVideoExtension extends Extension
   {
     $configuration = new Configuration();
     $config = $this->processConfiguration($configuration, $configs);
-
-    $loader = $this->getFileLoader($container);
-
+    $loader = new Loader\PhpFileLoader(
+      $container, new FileLocator(__DIR__.'/../Resources/config')
+    );
     /**
      * Configured providers
      *
      * @var array
      */
-    $providers = array_keys($config['providers']);
-
-    foreach($providers as $provider)
-    {
-      /**
-       * Idea: Move bundle configuration from app/config/config.yml
-       * to [bundle]/Resources/config/providers/[provider].yml
-       * and ability to merge those. Main app configuration should be
-       * able to override local config.
-       */
-      $this->configureProvider(
-        $provider, $config['providers'][$provider], $container
-      );
-      /**
-       * Load provider into DI container with given configuration
-       */
-      $loader->load($this->resolveProviderConfig($provider));
-    }
-
+    $container->setParameter('wtk_video_providers', $config['providers']);
+    // Idea: Move bundle configuration from app/config/config.yml
+    // to [bundle]/Resources/config/providers/[provider].yml
+    // and ability to merge those. Main app configuration should be
+    // able to override local config
     $loader->load('services.php');
-  }
-
-  /**
-   * @param  string           $provider
-   * @param  ContainerBuilder $container
-   * @return void
-   */
-  protected function configureProvider($provider, array $config, ContainerBuilder $container)
-  {
-    /**
-     * Set provider config
-     */
-    $container->setParameter($provider . '_config', $config);
-  }
-
-  /**
-   * @param  string $provider
-   * @return string
-   */
-  protected function resolveProviderConfig($provider)
-  {
-    return 'providers/' . strtolower($provider) . '.php';
-  }
-
-  /**
-   * @param  ContainerBuilder $container
-   * @return PhpFileLoader
-   */
-  protected function getFileLoader(ContainerBuilder $container)
-  {
-    if(null === $this->loader)
-    {
-      $this->loader = new Loader\PhpFileLoader(
-        $container, new FileLocator(__DIR__.'/../Resources/config')
-      );
-    }
-
-    return $this->loader;
   }
 
 }

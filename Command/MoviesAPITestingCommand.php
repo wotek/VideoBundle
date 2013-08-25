@@ -19,11 +19,12 @@ class MoviesAPITestingCommand extends ContainerAwareCommand
 
   protected function execute(InputInterface $input, OutputInterface $output)
   {
-    $yt = $this->getContainer()->get('wtk.movies.provider.vimeo');
-    $video = $yt->get(2);
-    var_export($video);
+    $service = $this->getContainer()->get('wtk.movies');
+    $vimeo = $service->getProvider('vimeo')->getClient();
 
-    // $yt = $this->getContainer()->get('wtk.movies.provider.youtube');
-    // $video = $yt->get('the0KZLEacs');
+    $response = $vimeo->checkTicket('3067758443a5729bacb60739ae69bfaf');
+
+    var_export($response);
+
   }
 }

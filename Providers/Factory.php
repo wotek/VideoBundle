@@ -1,77 +1,144 @@
 <?php
 namespace Wtk\VideoBundle\Providers;
-
+use Symfony\Component\Console\Output\OutputInterface;
 /**
  * @author wzalewski
  */
 class Factory {
-
-  const VIMEO = 'vimeo';
-  const YOUTUBE = 'youtube';
-
   /**
    * Available providers
+   *
    * @var array
    */
-  protected static $providers = array(
-    self::VIMEO,
-    self::YOUTUBE,
-  );
+  protected $providers = array();
 
   /**
-   * @param  string $provider
-   * @param  array  $config
+   * Providers configuration
+   *
+   * @var array
+   */
+  protected $configuration = array();
+
+  /**
+   * @var OutputInterface
+   */
+  protected static $logger;
+
+  /**
+   * @param array $configuration Configured providers
+   */
+  public function __construct(array $configuration)
+  {
+    $this->configuration = $configuration;
+    /**
+     * Set available providers
+     *
+     * @var array
+     */
+    $this->providers = array_keys($configuration);
+  }
+
+  /**
+   * Factory method. Returns pre-configured provider.
+   *
+   * @param  string $provider   Provider name
+   * @param  array  $config     Need to override provider configuration?
+   *
    * @return ProviderInterface
    */
-  public static function factory($provider, array $config = array())
+  public function get($provider, array $config = array())
   {
-    if(false === self::validateProvider($provider))
+    if(!in_array($provider, $this->providers))
     {
-      throw new \InvalidArgumentException(
+      throw new \Wtk\VideoBundle\Providers\Provider\Exception(
         sprintf("Invalid provider given. Supported providers: %s",
           implode(', ', $this->providers)
         )
       );
     }
+    /**
+     * Figure out provider classname
+     */
+    $classname = $this->resolveClassname($provider);
 
-    $providerClassName = self::resolveProviderClassname($provider);
-
-    if(!class_exists($providerClassName))
+    if(!class_exists($classname))
     {
-      throw new \InvalidArgumentException(
-        "Class $providerClassName does not exists"
+      throw new \Wtk\VideoBundle\Providers\Provider\Exception(
+        "Class $classname does not exists"
       );
     }
 
-    return new $providerClassName($config);
+    /**
+     * Default configuration
+     * @var array
+     */
+    $default = $this->getConfig($provider);
+
+    if(0 < count($config))
+    {
+      /**
+       * @todo : This should be taken by Configuration class
+       *
+       * Required key names
+       *
+       * @var array
+       */
+      $required = array_keys($default);
+
+      if(0 < count($unsupported = array_diff(array_keys($config), $required)))
+      {
+        throw new \Wtk\VideoBundle\Providers\Provider\Exception(
+          sprintf("Unrecognized config key: %s", implode(', ', $unsupported))
+        );
+      }
+    }
+
+    $config = array_merge($default, $config);
+
+    $instance = new $classname($config);
+
+    /**
+     * For verbose purposes only:
+     */
+    if(self::$logger)
+    {
+      $instance->setLogger(self::$logger);
+    }
+
+    return $instance;
   }
 
   /**
-   * @param  string $provider
-   * @return bool
+   * @param  OutputInterface $logger
+   * @return void
    */
-  public static function validateProvider($provider)
+  public static function registerLogger(OutputInterface $logger)
   {
-    return in_array($provider, self::$providers);
+    self::$logger = $logger;
   }
 
   /**
    * @param  string $provider
    * @return string
    */
-  protected static function resolveProviderClassname($provider)
+  protected function resolveClassname($provider)
   {
+    /**
+     * See if there is some helper like in Zend framework
+     * aka Symfony_Class_Loader?
+     */
     return __NAMESPACE__ . '\\' . ucfirst($provider);
   }
 
-  // Well, I could not find way to tell DI container to call
-  // factory method statically :(
-  //
-  // @todo: Dig through docs/code
-  //
-  // private function __construct()
-  // {}
+  /**
+   * Returns provider configuration
+   *
+   * @param  string $provider
+   * @return array
+   */
+  protected function getConfig($provider)
+  {
+    return $this->configuration[$provider];
+  }
 
-  public function __clone()
-  {}
 }

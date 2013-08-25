@@ -3,14 +3,14 @@ namespace Wtk\VideoBundle\Service;
 
 use Symfony\Component\HttpFoundation\File\File;
 use Wtk\VideoBundle\Entity\Movie\RepositoryInterface;
+use Wtk\VideoBundle\Providers\Factory as ProviderFactory;
 use Wtk\VideoBundle\Entity\Movie;
-use Wtk\VideoBundle\Providers\Provider\ProviderInterface;
 
 class Movies {
   /**
-   * @var ProviderInterface
+   * @var ProviderFactory
    */
-  protected $provider;
+  protected $providers;
 
   /**
    *
@@ -19,10 +19,12 @@ class Movies {
   protected $repository;
 
   /**
-   * @param RepositoryInterface       $repository
+   * @param RepositoryInterface $repository
+   * @param ProviderFactory     $providers
    */
-  public function __construct(RepositoryInterface $repository) {
+  public function __construct(RepositoryInterface $repository, ProviderFactory $providers) {
     $this->repository = $repository;
+    $this->providers = $providers;
   }
 
   /**
@@ -30,32 +32,32 @@ class Movies {
    *
    * @param  File     $file
    * @param  string   $provider
-   * @return int|null
    */
-  public function upload(File $file)
+  public function upload($provider, File $file)
   {
-    return $this->getProvider()->upload($file);
+    /**
+     * Handle all process with inserting new entity to DB
+     * and updating on every tik tak of file upload.
+     *
+     * Let provider handle file uploading, checking if upload is complete
+     *
+     * Etc.
+     */
+    $provider = $this->getProvider($provider);
+    return $provider->upload($file);
   }
 
   /**
-   * @param ProviderInterface $provider
-   */
-  public function setProvider(ProviderInterface $provider)
-  {
-    $this->provider = $provider;
-  }
-
-  /**
+   * Use provider factory method to get provider instance
+   *
+   * @param string $provider Provider name
+   * @param array  $config   Provider config
+   *
    * @return ProviderInterface
    */
-  public function getProvider()
+  public function getProvider($provider, array $config = array())
   {
-    if(null === $this->provider)
-    {
-      throw new \Exception("Missing provider instance");
-    }
-
-    return $this->provider;
+    return $this->providers->get($provider, $config);
   }
 
   /**

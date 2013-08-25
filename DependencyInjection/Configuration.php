@@ -23,16 +23,13 @@ class Configuration implements ConfigurationInterface
     /**
      * Let's define what's allowed and required
      * in configuration section.
-     */
-    
-    /**
-     * @todo : Each provider may have different options names. 
-     *       So, there is need for separate Configuration 
-     *       classes for provider
+     *
+     * @todo : Each provider may have different options names.
+     *         So, there is need for separate Configuration
+     *         classes for provider
      */
     $rootNode
       ->children()
-      // @todo: Validate provider name.
         ->arrayNode('providers')
           ->requiresAtLeastOneElement()
           ->example('Set name of provider: vimeo, youtube')

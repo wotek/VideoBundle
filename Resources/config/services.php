@@ -33,7 +33,7 @@ $container->setDefinition(
   'wtk.movies.provider.factory',
   new Definition(
     'Wtk\VideoBundle\Providers\Factory',
-    array()
+    array('%wtk_video_providers%')
   )
 );
 
@@ -45,7 +45,8 @@ $container->setDefinition(
   new Definition(
     'Wtk\VideoBundle\Service\Movies',
     array(
-      new Reference('wtk.movies.repository')
+      new Reference('wtk.movies.repository'),
+      new Reference('wtk.movies.provider.factory'),
     )
   )
 );

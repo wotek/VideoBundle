@@ -32,7 +32,7 @@ class MoviesCommand extends ContainerAwareCommand
       'provider',
       null,
       InputOption::VALUE_REQUIRED,
-      'Which provider: youtube, vimeo'
+      'Provider name'
       )
     ->addOption(
       'path',
@@ -50,18 +50,15 @@ class MoviesCommand extends ContainerAwareCommand
    */
   protected function execute(InputInterface $input, OutputInterface $output)
   {
+    /**
+     * @var Wtk\VideoBundle\Service\Movies
+     */
     $service = $this->getContainer()->get('wtk.movies');
 
     list($provider, $filepath) = $this->parseOptions($input->getOptions());
 
-    if(false === ProviderFactory::validateProvider($provider))
-    {
-      throw new \Exception("Invalid provider given.");
-    }
-
-    $provider = $this->getContainer()->get("wtk.movies.provider.$provider");
-
     $errors = $this->checkFile($filepath);
+
     if(0 < count($errors))
     {
       foreach($errors as $error)
@@ -71,18 +68,23 @@ class MoviesCommand extends ContainerAwareCommand
       return false;
     }
 
-    $file = new File($filepath);
+    /**
+     * For verbose purposes only.
+     * // if --verbose option?
+     */
+    ProviderFactory::registerLogger($output);
 
-    $service->setProvider($provider);
-    $service->upload($file);
+    /**
+     * Upload file using $provider
+     */
+    $service->upload($provider, new File($filepath), $output);
   }
 
   /**
    * @param  string     $filepath
    * @throws Exception
-   * @return ConstraintViolationListInterface
    *
-   * @todo : When implementing controller, move it to service.
+   * @return ConstraintViolationListInterface
    */
   protected function checkFile($file)
   {
@@ -97,7 +99,7 @@ class MoviesCommand extends ContainerAwareCommand
         // Feel free to add more types.
         // This is just a proof of concept
       ),
-      'mimeTypesMessage' => 'Please upload a valid video file',
+      'mimeTypesMessage' => 'Please select a valid video file',
     ));
 
     return $validator->validateValue($file, $constraint);
