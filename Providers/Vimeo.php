@@ -3,7 +3,7 @@ namespace Wtk\VideoBundle\Providers;
 
 use Wtk\VideoBundle\Providers\Provider\AbstractProvider;
 use Wtk\VideoBundle\Providers\Provider\Client\Vimeo as VimeoClient;
-use Symfony\Component\HttpFoundation\File\File;
+use Wtk\VideoBundle\VideoFile;
 use Wtk\VideoBundle\Providers\Provider\Exception as ProviderException;
 
 class Vimeo extends AbstractProvider {
@@ -21,9 +21,9 @@ class Vimeo extends AbstractProvider {
   /**
    * Uploads video to Vimeo
    *
-   * @param  File $file
+   * @param  VideoFile $file
    */
-  public function upload(File $file)
+  public function upload(VideoFile $file)
   {
     $this->log(
       sprintf("Uploading file %s ...", $file->getFilename())
@@ -53,19 +53,34 @@ class Vimeo extends AbstractProvider {
 
     $ticket = $client->getTicket();
 
-    $this->log(
-      sprintf("Got ticket: %s", json_encode($ticket))
-    );
+    if(false == $client->checkTicket($ticket['id']))
+    {
+      throw new ProviderException(
+        sprintf("Ticket %s has expired.", $ticket['id'])
+      );
+    }
+
+    $this->log(sprintf("Got ticket: %s", $ticket['id']));
+
     /**
      * 3. Transfer video data
      */
     $this->log("Starting file upload...");
-    $client->upload(
-      $ticket['endpoint'],
-      $file
-    );
 
-    // return $this->getClient()->upload($file);
+    $is_success = $client->upload($ticket['endpoint'], $file);
+
+    $verified = $client->verify($ticket['endpoint'], $file);
+    $this->log(sprintf("Upload verified?: %s", $verified ? 'Yes' : 'No'));
+
+    if($verified)
+    {
+      $video_id = $client->complete($ticket['id'], $file->getFilename());
+      $this->log(sprintf("Uploaded video id : %d", $video_id));
+    }
+    {
+      // Handle upload resume
+    }
+
   }
 
   /**

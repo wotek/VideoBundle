@@ -9,8 +9,8 @@ use Symfony\Component\Console\Output\OutputInterface;
 
 use Wtk\VideoBundle\Entity\Movie;
 use Wtk\VideoBundle\Providers\Factory as ProviderFactory;
+use Wtk\VideoBundle\VideoFile;
 
-use Symfony\Component\HttpFoundation\File\File;
 use Symfony\Component\Validator\Validation;
 use Symfony\Component\Validator\Constraints as Assert;
 
@@ -19,6 +19,8 @@ class MoviesCommand extends ContainerAwareCommand
 {
   const OPTION_PROVIDER = 'provider';
   const OPTION_PATH = 'path';
+  const OPTION_TITLE = 'title';
+  const OPTION_DESCRIPTION = 'description';
 
   /**
    * @return void
@@ -29,17 +31,30 @@ class MoviesCommand extends ContainerAwareCommand
     ->setName('movies:upload')
     ->setDescription('Upload video file to one of supported providers')
     ->addOption(
-      'provider',
+      self::OPTION_PROVIDER,
       null,
       InputOption::VALUE_REQUIRED,
       'Provider name'
       )
     ->addOption(
-      'path',
+      self::OPTION_PATH,
       null,
       InputOption::VALUE_REQUIRED,
       'Path to file'
       )
+    ->addOption(
+      self::OPTION_TITLE,
+      null,
+      InputOption::VALUE_OPTIONAL,
+      'Uploaded video title'
+      )
+    ->addOption(
+      self::OPTION_DESCRIPTION,
+      null,
+      InputOption::VALUE_OPTIONAL,
+      'Video description'
+      )
+
     ;
   }
 
@@ -73,11 +88,16 @@ class MoviesCommand extends ContainerAwareCommand
      * // if --verbose option?
      */
     ProviderFactory::registerLogger($output);
+    ProviderFactory::registerProgressHelper(
+      $this->getHelperSet()->get('progress'),
+      $output
+    );
+
 
     /**
      * Upload file using $provider
      */
-    $service->upload($provider, new File($filepath), $output);
+    $service->upload($provider, new VideoFile($filepath), $output);
   }
 
   /**

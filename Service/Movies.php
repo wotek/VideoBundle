@@ -1,7 +1,7 @@
 <?php
 namespace Wtk\VideoBundle\Service;
 
-use Symfony\Component\HttpFoundation\File\File;
+use Wtk\VideoBundle\VideoFile;
 use Wtk\VideoBundle\Entity\Movie\RepositoryInterface;
 use Wtk\VideoBundle\Providers\Factory as ProviderFactory;
 use Wtk\VideoBundle\Entity\Movie;
@@ -30,19 +30,15 @@ class Movies {
   /**
    * Uploads file
    *
-   * @param  File     $file
-   * @param  string   $provider
+   * @param  VideoFile     $file
+   * @param  string        $provider
    */
-  public function upload($provider, File $file)
+  public function upload($provider, VideoFile $file, array $meta = array())
   {
     /**
-     * Handle all process with inserting new entity to DB
-     * and updating on every tik tak of file upload.
-     *
-     * Let provider handle file uploading, checking if upload is complete
-     *
-     * Etc.
+     * Check if given file exists in DB
      */
+
     $provider = $this->getProvider($provider);
     return $provider->upload($file);
   }

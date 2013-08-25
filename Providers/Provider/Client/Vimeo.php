@@ -7,8 +7,11 @@ use Guzzle\Plugin\Oauth\OauthPlugin;
 use Guzzle\Service\Client;
 use Guzzle\Service\Description\ServiceDescription;
 
-use Symfony\Component\HttpFoundation\File\File;
+use Wtk\VideoBundle\VideoFile;
 use Guzzle\Http\Message\Response;
+
+use Guzzle\Http\EntityBody;
+use Guzzle\Http\IoEmittingEntityBody;
 
 class Vimeo extends Client {
   /**
@@ -39,12 +42,34 @@ class Vimeo extends Client {
   /**
    * Stream file to remote destination
    *
-   * @param  File   $file
-   * @return
+   * @param  VideoFile   $file
+   * @return bool
    */
-  public function upload($endpoint, File $file, $chunks = true)
+  public function upload($endpoint, VideoFile $file)
   {
-    var_export($endpoint);
+    $body = new IoEmittingEntityBody(
+      EntityBody::factory(
+        fopen($file->getRealPath(), 'r'),
+        $file->getSize()
+      )
+    );
+
+    $body->getEventDispatcher()
+    ->addListener('body.read', function($event) {
+      echo '*';
+    });
+
+    $request = $this->put($endpoint, null, $body);
+    $request->setHeader('Content-Type', $file->getMimeType());
+
+    $response = $request->send();
+
+    if($response->isSuccessful())
+    {
+      return true;
+    }
+
+    return $this->handleError($response);
   }
 
   /**
@@ -66,7 +91,8 @@ class Vimeo extends Client {
         'ticket_id' => $ticket_id,
         'filename' => $filename,
       )
-    )->execute();
+    );
+    $command->execute();
 
     $response = $command->getResponse();
 
@@ -193,7 +219,7 @@ class Vimeo extends Client {
    *
    * @return
    */
-  public function verify($endpoint)
+  public function verify($endpoint, File $file)
   {
     /**
      * To check how much of a file has transferred, perform the exact same
@@ -202,6 +228,25 @@ class Vimeo extends Client {
      *
      * @see  https://developer.vimeo.com/apis/advanced/upload#streaming-step4
      */
+    $request = $this->put($endpoint);
+    $request->setHeader('Content-Range', 'bytes */*');
+    $request->setHeader('Content-Length', '0');
+    $response = $request->send();
+    /**
+     * Expected response:
+     *
+     * HTTP/1.1 308
+     * Content-Length: 0
+     * Range: bytes=0-1000
+     */
+    $response = $request->send();
+
+    if(308 === $response->getStatusCode())
+    {
+      return true;
+    }
+
+    return false;
   }
 
   /**

@@ -6,6 +6,7 @@ use Guzzle\Http\Client;
 use Guzzle\Plugin\Oauth\OauthPlugin;
 use Guzzle\Plugin\Cache\CachePlugin;
 use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\Console\Helper\ProgressHelper;
 
 abstract class AbstractProvider implements ProviderInterface
 {
@@ -17,7 +18,12 @@ abstract class AbstractProvider implements ProviderInterface
   /**
    * @var OutputInterface
    */
-  protected $logger = null;
+  protected $logger;
+
+  /**
+   * @var ProgressHelper
+   */
+  protected $progress;
 
   /**
    * @param array $config
@@ -42,6 +48,27 @@ abstract class AbstractProvider implements ProviderInterface
     $this->logger->writeln(
       sprintf("<info>%s</info>", $message)
     );
+  }
+
+  public function setProgressHelper(ProgressHelper $helper)
+  {
+    $this->progress = $helper;
+    $this->progress->start($this->logger, 10);
+  }
+
+  protected function updateProgress($complete = false)
+  {
+    if(null === $this->progress)
+    {
+      return;
+    }
+
+    $this->progress->advance();
+
+    if($complete)
+    {
+      $this->progress->finish();
+    }
   }
 
   abstract protected function getClient();

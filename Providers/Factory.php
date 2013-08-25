@@ -1,6 +1,8 @@
 <?php
 namespace Wtk\VideoBundle\Providers;
 use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\Console\Helper\ProgressHelper;
+
 /**
  * @author wzalewski
  */
@@ -23,6 +25,8 @@ class Factory {
    * @var OutputInterface
    */
   protected static $logger;
+
+  protected static $progress;
 
   /**
    * @param array $configuration Configured providers
@@ -105,6 +109,11 @@ class Factory {
       $instance->setLogger(self::$logger);
     }
 
+    if(self::$progress)
+    {
+      $instance->setProgressHelper(self::$progress);
+    }
+
     return $instance;
   }
 
@@ -115,6 +124,11 @@ class Factory {
   public static function registerLogger(OutputInterface $logger)
   {
     self::$logger = $logger;
+  }
+
+  public static function registerProgressHelper(ProgressHelper $progress)
+  {
+    self::$progress = $progress;
   }
 
   /**
