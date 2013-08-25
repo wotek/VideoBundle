@@ -19,6 +19,24 @@ class Vimeo extends AbstractProvider {
   }
 
   /**
+   * @param int     $id
+   * @param string  $title
+   */
+  public function setTitle($id, $title)
+  {
+    $this->getClient()->setTitle($id, $title);
+  }
+
+  /**
+   * @param int     $id
+   * @param string  $description
+   */
+  public function setDescription($id, $description)
+  {
+    $this->getClient()->setDescription($id, $description);
+  }
+
+  /**
    * Uploads video to Vimeo
    *
    * @param  VideoFile $file
@@ -28,10 +46,7 @@ class Vimeo extends AbstractProvider {
     $this->log(
       sprintf("Uploading file %s ...", $file->getFilename())
     );
-    /**
-     * 4. Verfiy upload
-     * 5. Complete process -> return video_id
-     */
+
     $client = $this->getClient();
     /**
      * 1. Check user quota
@@ -67,20 +82,46 @@ class Vimeo extends AbstractProvider {
      */
     $this->log("Starting file upload...");
 
-    $is_success = $client->upload($ticket['endpoint'], $file);
+    $progress_callback = null;
+    if($this->progress)
+    {
+      $helper = $this->progress;
+      $progress_callback = function($event) use ($helper)
+      {
+        // We'll get > 100%. EntityBody payload
+        $helper->advance($event['length']);
+      };
+    }
 
+    $is_success = $client->upload($ticket['endpoint'], $file, $progress_callback);
+
+    /**
+     * Succeess upload video id: 73084036
+     */
+
+
+    /**
+     * 4. Verfiy upload
+     */
     $verified = $client->verify($ticket['endpoint'], $file);
     $this->log(sprintf("Upload verified?: %s", $verified ? 'Yes' : 'No'));
 
-    if($verified)
+    if($is_success & $verified)
     {
+      /**
+       * 5. Complete process
+       */
       $video_id = $client->complete($ticket['id'], $file->getFilename());
       $this->log(sprintf("Uploaded video id : %d", $video_id));
     }
+    else
     {
-      // Handle upload resume
+      throw new ProviderException(
+        "Could not verify uploaded file or upload failed. \nResuming upload currently not implemented. Sorry."
+      );
     }
 
+    return $video_id;
   }
 
   /**

@@ -33,7 +33,7 @@ class Movies {
    * @param  VideoFile     $file
    * @param  string        $provider
    */
-  public function upload($provider, VideoFile $file, array $meta = array())
+  public function upload($provider, VideoFile $file)
   {
     /**
      * Check if given file exists in DB

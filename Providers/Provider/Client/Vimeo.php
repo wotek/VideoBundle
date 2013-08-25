@@ -45,7 +45,7 @@ class Vimeo extends Client {
    * @param  VideoFile   $file
    * @return bool
    */
-  public function upload($endpoint, VideoFile $file)
+  public function upload($endpoint, VideoFile $file, \Closure $callback = null)
   {
     $body = new IoEmittingEntityBody(
       EntityBody::factory(
@@ -53,11 +53,7 @@ class Vimeo extends Client {
         $file->getSize()
       )
     );
-
-    $body->getEventDispatcher()
-    ->addListener('body.read', function($event) {
-      echo '*';
-    });
+    $body->getEventDispatcher()->addListener('body.read', $callback);
 
     $request = $this->put($endpoint, null, $body);
     $request->setHeader('Content-Type', $file->getMimeType());
@@ -219,7 +215,7 @@ class Vimeo extends Client {
    *
    * @return
    */
-  public function verify($endpoint, File $file)
+  public function verify($endpoint, VideoFile $file)
   {
     /**
      * To check how much of a file has transferred, perform the exact same

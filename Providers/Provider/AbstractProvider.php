@@ -2,9 +2,6 @@
 
 namespace Wtk\VideoBundle\Providers\Provider;
 
-use Guzzle\Http\Client;
-use Guzzle\Plugin\Oauth\OauthPlugin;
-use Guzzle\Plugin\Cache\CachePlugin;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Helper\ProgressHelper;
 
@@ -33,11 +30,23 @@ abstract class AbstractProvider implements ProviderInterface
     $this->config = $config;
   }
 
+  /**
+   * @return Guzzle\Service\Client
+   */
+  abstract protected function getClient();
+
+  /**
+   * @param OutputInterface $output
+   */
   public function setLogger(OutputInterface $output)
   {
     $this->logger = $output;
   }
 
+  /**
+   * @param  string $message
+   * @return void
+   */
   protected function log($message)
   {
     if(null === $this->logger)
@@ -50,28 +59,13 @@ abstract class AbstractProvider implements ProviderInterface
     );
   }
 
+  /**
+   * @param ProgressHelper $helper
+   */
   public function setProgressHelper(ProgressHelper $helper)
   {
     $this->progress = $helper;
-    $this->progress->start($this->logger, 10);
   }
-
-  protected function updateProgress($complete = false)
-  {
-    if(null === $this->progress)
-    {
-      return;
-    }
-
-    $this->progress->advance();
-
-    if($complete)
-    {
-      $this->progress->finish();
-    }
-  }
-
-  abstract protected function getClient();
 
   /**
    * @return array

@@ -25,7 +25,6 @@ class Factory {
    * @var OutputInterface
    */
   protected static $logger;
-
   protected static $progress;
 
   /**

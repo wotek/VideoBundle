@@ -1,9 +1,11 @@
 <?php
 namespace Wtk\VideoBundle\Providers\Provider;
 
-use Symfony\Component\HttpFoundation\File\File;
+use Wtk\VideoBundle\VideoFile;
 
 interface ProviderInterface {
-  function upload(File $file);
+  function upload(VideoFile $file);
   function get($id);
+  function setTitle($id, $title);
+  function setDescription($id, $description);
 }

@@ -54,7 +54,6 @@ class MoviesCommand extends ContainerAwareCommand
       InputOption::VALUE_OPTIONAL,
       'Video description'
       )
-
     ;
   }
 
@@ -83,21 +82,22 @@ class MoviesCommand extends ContainerAwareCommand
       return false;
     }
 
+    $file = new VideoFile($filepath);
+
+    $progress = $this->getHelperSet()
+                ->get('progress');
+    $progress->start($output, $file->getSize());
     /**
      * For verbose purposes only.
-     * // if --verbose option?
+     * @todo: Add verbose option
      */
     ProviderFactory::registerLogger($output);
-    ProviderFactory::registerProgressHelper(
-      $this->getHelperSet()->get('progress'),
-      $output
-    );
-
+    ProviderFactory::registerProgressHelper($progress);
 
     /**
      * Upload file using $provider
      */
-    $service->upload($provider, new VideoFile($filepath), $output);
+    $service->upload($provider, $file);
   }
 
   /**
