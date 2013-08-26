@@ -1,0 +1,158 @@
+{
+    "name": "Vimeo",
+    "apiVersion" : "2.0",
+    "baseUrl": "http://vimeo.com/api/rest/v2",
+    "description": "https://developer.vimeo.com/apis/advanced",
+    "operations": {
+      "getInfo": {
+        "httpMethod": "GET",
+        "parameters": {
+          "format": {
+            "default": "json",
+            "location": "query",
+            "static": true
+          },
+          "method": {
+            "default": "vimeo.videos.getInfo",
+            "location": "query",
+            "static": true
+          },
+          "video_id": {
+            "location": "query",
+            "required": true,
+            "type": "integer"
+          }
+        }
+      },
+      "getQuota" : {
+        "httpMethod": "GET",
+        "parameters": {
+          "format": {
+            "default": "json",
+            "location": "query",
+            "static": true
+          },
+          "method": {
+            "default": "vimeo.videos.upload.getQuota",
+            "location": "query",
+            "static": true
+          }
+        }
+      },
+      "getTicket" : {
+        "httpMethod": "GET",
+        "parameters": {
+          "format": {
+            "default": "json",
+            "location": "query",
+            "static": true
+          },
+          "method": {
+            "default": "vimeo.videos.upload.getTicket",
+            "location": "query",
+            "static": true
+          },
+          "upload_method": {
+            "default": "streaming",
+            "location": "query",
+            "static": true
+          }
+        }
+      },
+      "checkTicket" : {
+        "httpMethod": "GET",
+        "parameters": {
+          "format": {
+            "default": "json",
+            "location": "query",
+            "static": true
+          },
+          "method": {
+            "default": "vimeo.videos.upload.checkTicket",
+            "location": "query",
+            "static": true
+          },
+          "ticket_id": {
+            "location": "query",
+            "required": true,
+            "type": "string"
+          }
+        }
+      },
+      "complete" : {
+        "httpMethod": "GET",
+        "parameters": {
+          "format": {
+            "default": "json",
+            "location": "query",
+            "static": true
+          },
+          "method": {
+            "default": "vimeo.videos.upload.complete",
+            "location": "query",
+            "static": true
+          },
+          "ticket_id": {
+            "location": "query",
+            "required": true,
+            "type": "string"
+          },
+          "filename": {
+            "location": "query",
+            "required": true,
+            "type": "string"
+          }
+        }
+      },
+      "setTitle" : {
+        "httpMethod": "GET",
+        "parameters": {
+          "format": {
+            "default": "json",
+            "location": "query",
+            "static": true
+          },
+          "method": {
+            "default": "vimeo.videos.setTitle",
+            "location": "query",
+            "static": true
+          },
+          "video_id": {
+            "location": "query",
+            "required": true,
+            "type": "integer"
+          },
+          "title": {
+            "location": "query",
+            "required": true,
+            "type": "string"
+          }
+        }
+      },
+      "setDescription" : {
+        "httpMethod": "GET",
+        "parameters": {
+          "format": {
+            "default": "json",
+            "location": "query",
+            "static": true
+          },
+          "method": {
+            "default": "vimeo.videos.setDescription",
+            "location": "query",
+            "static": true
+          },
+          "video_id": {
+            "location": "query",
+            "required": true,
+            "type": "integer"
+          },
+          "description": {
+            "location": "query",
+            "required": true,
+            "type": "string"
+          }
+        }
+      }
+    }
+}
