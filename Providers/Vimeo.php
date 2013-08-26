@@ -88,18 +88,15 @@ class Vimeo extends AbstractProvider {
       $helper = $this->progress;
       $progress_callback = function($event) use ($helper)
       {
-        // We'll get > 100%. EntityBody payload
+        // We'll get > 100%. EntityBody payload. Dont worry ;)
         $helper->advance($event['length']);
       };
     }
 
     $is_success = $client->upload($ticket['endpoint'], $file, $progress_callback);
-
     /**
      * Succeess upload video id: 73084036
      */
-
-
     /**
      * 4. Verfiy upload
      */
