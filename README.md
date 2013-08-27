@@ -29,15 +29,9 @@ http://getcomposer.org/ or just run the following command:
 
     curl -s http://getcomposer.org/installer | php
 
-### Install required dependencies
-
-    # Add dependencies
-    # Composer will automaticaly download & install & modify your composer.json
-    composer require guzzle/guzzle:~3.7
-
 ### Install VideoBundle
-
-    composer install wotek/video-bundle
+    # Composer will automaticaly download & install & modify your composer.json
+    composer require wotek/video-bundle:dev-master
 
 2) Configuration
 ----------------------------------
