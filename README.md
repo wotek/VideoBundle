@@ -15,11 +15,6 @@ I do hope you find it useful.
 
 * Vimeo
 
-**There is a lot to do:**
-
-* Youtube API
-* 100% test coverage
-
 1) Requirements
 ----------------------------------
 
