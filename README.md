@@ -1,7 +1,26 @@
-1) Requirements
+VideoBundle
 ----------------------------------
 
-Before you can use Vimeo bundle you need to satisfy bundle dependencies:
+VideoBundle is a result of me learning Symfony2 Framework.
+I do hope you find it useful.
+
+### Features
+
+* Uploads video through provider API
+* Keeps track of uploaded files
+
+### Supported API's
+
+* Vimeo
+* Youtube [incoming]
+
+### Todo
+
+* Youtube API
+* 100% test coverage
+
+1) Requirements
+----------------------------------
 
 * Guzzle (@see https://github.com/guzzle/guzzle)
 
@@ -67,8 +86,6 @@ Example:
 
 3) Usage
 ----------------------------------
-
-### Command line
 
 Bundle provides (only) command line interface to manage video uploads.
 
