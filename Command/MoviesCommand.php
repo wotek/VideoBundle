@@ -74,7 +74,8 @@ class MoviesCommand extends ContainerAwareCommand
      */
     $service = $this->getContainer()->get('wtk.movies');
 
-    list($provider, $filepath) = $this->parseOptions($input->getOptions());
+    list($provider, $filepath, $title, $description) =
+      $this->parseOptions($input->getOptions());
 
     $errors = $this->checkFile($filepath);
 
@@ -88,28 +89,27 @@ class MoviesCommand extends ContainerAwareCommand
     }
 
     $file = new VideoFile($filepath);
-
     /**
      * Set file title & description.
+     *
      * Provider will discover that file has title & description provided.
+     *
      * If so. Will notify remote API.
      */
-    $file->setTitle($input->getOption(self::OPTION_TITLE));
-    $file->setDescription($input->getOption(self::OPTION_DESCRIPTION));
+    $file->setTitle($title);
+    $file->setDescription($description);
 
     /**
      * Idea: What if provider implemented EventDispatcherInterface
      * and might want to notify what's he up to right now?
      *
      * @todo : Make IoEmittingVimeo provider. This is the cleanest way to
-     *         implement verbosity without making code look like crap.
+     *         implement verbosity (yep, I'm thinking it now ;>)
+     *         without making code look like crap.
      */
-
-    $this->log(
-      sprintf(
+    $this->log(sprintf(
         "Uploading %s this might take a while. Hold on. Go get a coffe",
-        $file->getFilename()
-      )
+        $file->getFilename())
     );
 
     $video_id = $service->upload($provider, $file);
@@ -150,7 +150,9 @@ class MoviesCommand extends ContainerAwareCommand
   {
     return array(
       strtolower($options[self::OPTION_PROVIDER]),
-      $options[self::OPTION_PATH]
+      $options[self::OPTION_PATH],
+      $options[self::OPTION_TITLE],
+      $options[self::OPTION_DESCRIPTION]
     );
   }
 

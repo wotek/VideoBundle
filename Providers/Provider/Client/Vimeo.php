@@ -40,7 +40,9 @@ class Vimeo extends Client {
   }
 
   /**
-   * Stream file to remote destination
+   * Stream file to remote destination.
+   * Don't worry about chunking file. Guzzle actually takes
+   * care of that.
    *
    * @param  VideoFile   $file
    * @return bool
@@ -50,18 +52,21 @@ class Vimeo extends Client {
     $body = EntityBody::factory(
       fopen($file->getRealPath(), 'r'), $file->getSize()
     );
-
+    /**
+     * @todo : Rewrite using service descriptions.
+     */
     $request = $this->put($endpoint, null, $body);
     $request->setHeader('Content-Type', $file->getMimeType());
 
     $response = $request->send();
 
-    if($response->isSuccessful())
-    {
-      return true;
-    }
-
-    return $this->handleError($response);
+    return $this->handleResponse(
+      $response,
+      function($response)
+      {
+        return true;
+      }
+    );
   }
 
   /**
@@ -78,23 +83,17 @@ class Vimeo extends Client {
    */
   public function complete($ticket_id, $filename)
   {
-    $command = $this->getCommand('complete',
+    return $this->executeCommand('complete',
       array(
         'ticket_id' => $ticket_id,
-        'filename' => $filename,
-      )
+        'filename'  => $filename,
+      ),
+      function($response)
+      {
+        $response = $response->json();
+        return (int) $response['ticket']['video_id'];
+      }
     );
-    $command->execute();
-
-    $response = $command->getResponse();
-
-    if($response->isSuccessful())
-    {
-      $response = $response->json();
-      return $response['ticket']['video_id'];
-    }
-
-    return $this->handleError($response);
   }
 
   /**
@@ -107,50 +106,38 @@ class Vimeo extends Client {
    */
   public function getInfo($id)
   {
-    $command = $this->getCommand('getInfo', array('video_id' => $id,))
-      ->execute()
-    ;
-
-    $response = $command->getResponse();
-
-    if($response->isSuccessful())
-    {
-      return $response->json();
-    }
-
-    return $this->handleError($response);
+    return $this->executeCommand('getInfo',
+      array('video_id' => $id),
+      function($response)
+      {
+        return $response->json();
+      }
+    );
   }
 
   /**
    * Returns user quota
    *
    * @api_method: vimeo.videos.upload.getQuota
+   * array (
+   *   'free' => '524288000',
+   *   'max' => '524288000',
+   *   'resets' => '6',
+   *   'used' => '0',
+   *   ),
    *
    * @return array
    */
   public function getQuota()
   {
-    $command = $this->getCommand('getQuota');
-    $command->execute();
-
-    $response = $command->getResponse();
-
-    if($response->isSuccessful())
-    {
-      $response = $response->json();
-      /**
-       * Returns:
-       * array (
-       *   'free' => '524288000',
-       *   'max' => '524288000',
-       *   'resets' => '6',
-       *   'used' => '0',
-       *   ),
-       */
-      return $response['user']['upload_space'];
-    }
-
-    return $this->handleError($response);
+    return $this->executeCommand('getQuota',
+      array(),
+      function($response)
+      {
+        $response = $response->json();
+        return $response['user']['upload_space'];
+      }
+    );
   }
 
   /**
@@ -167,18 +154,13 @@ class Vimeo extends Client {
    */
   public function getTicket()
   {
-    $command = $this->getCommand('getTicket');
-    $command->execute();
-
-    $response = $command->getResponse();
-
-    if($response->isSuccessful())
-    {
-      $response = $response->json();
-      return $response['ticket'];
-    }
-
-    return $this->handleError($response);
+    return $this->executeCommand('getTicket', array(),
+      function($response)
+      {
+        $response = $response->json();
+        return $response['ticket'];
+      }
+    );
   }
 
   /**
@@ -190,20 +172,14 @@ class Vimeo extends Client {
    */
   public function checkTicket($ticket_id)
   {
-    $command = $this->getCommand('checkTicket',
-      array('ticket_id' => $ticket_id)
+    return $this->executeCommand('checkTicket',
+      array('ticket_id' => $ticket_id),
+      function($response)
+      {
+        $response = $response->json();
+        return 1 === (int) $response['ticket']['valid'];
+      }
     );
-    $command->execute();
-
-    $response = $command->getResponse();
-
-    if($response->isSuccessful())
-    {
-      $response = $response->json();
-      return 1 === (int) $response['ticket']['valid'];
-    }
-
-    return $this->handleError($response);
   }
 
   /**
@@ -213,6 +189,9 @@ class Vimeo extends Client {
    */
   public function verify($endpoint, VideoFile $file)
   {
+    /**
+     * @todo : Rewrite using service descriptions.
+     */
     /**
      * To check how much of a file has transferred, perform the exact same
      * PUT request without the file data and with the header
@@ -241,44 +220,71 @@ class Vimeo extends Client {
     return false;
   }
 
+  /**
+   * Sets video title
+   *
+   * @param int     $video_id
+   * @param string  $title
+   */
   public function setTitle($video_id, $title)
   {
-    $command = $this->getCommand('setTitle',
+    return $this->executeCommand('setTitle',
       array(
-        'video_id' => $video_id,
-        'title' => $title
-      )
+        'video_id'  => $video_id,
+        'title'     => $title
+      ),
+      function($response)
+      {
+        return true;
+      }
     );
-    $command->execute();
-
-    $response = $command->getResponse();
-
-    if($response->isSuccessful())
-    {
-      return true;
-    }
-
-    return $this->handleError($response);
   }
 
+  /**
+   * Sets video description
+   *
+   * @param int     $video_id
+   * @param string  $description
+   */
   public function setVideoDescription($video_id, $description)
   {
-    $command = $this->getCommand('setDescription',
+    return $this->executeCommand('setDescription',
       array(
-        'video_id' => $video_id,
+        'video_id'    => $video_id,
         'description' => $description
-      )
+      ),
+      function($response)
+      {
+        return true;
+      }
     );
+  }
+
+  /**
+   * Executes API command.
+   *
+   * @param  string   $command    Command to be executed
+   * @param  array    $params     Command params
+   * @param  Closure  $onSuccess  On success callback
+   * @param  Closure  $onFailure  On failure callback
+   * @return void
+   */
+  protected function executeCommand($command, array $params = array(), \Closure $onSuccess = null, \Closure $onFailure = null)
+  {
+    /**
+     * Get command from service container
+     */
+    $command = $this->getCommand($command, $params);
+    /**
+     * Make request
+     */
     $command->execute();
-
-    $response = $command->getResponse();
-
-    if($response->isSuccessful())
-    {
-      return true;
-    }
-
-    return $this->handleError($response);
+    /**
+     * Handle response
+     */
+    return $this->handleResponse(
+      $command->getResponse(), $onSuccess, $onFailure
+    );
   }
 
   /**
@@ -291,21 +297,38 @@ class Vimeo extends Client {
    */
   protected function handleResponse(
     Response $response,
-    Closure $onSuccess = null,
-    Closure $onFailure = null)
+    \Closure $onSuccess = null,
+    \Closure $onFailure = null)
   {
+    if($response->isSuccessful())
+    {
+      if(null !== $onSuccess)
+      {
+        return $onSuccess($response);
+      }
 
+      return $response;
+    }
+
+    if(null !== $onFailure)
+    {
+      return $onFailure($response);
+    }
+
+    return $this->handleError($response);
   }
 
   /**
    * Default error handler
    *
    * @param  Response $response
-   * @return void
    */
   protected function handleError(Response $response)
   {
-
+    /**
+     * Misc::ignore($response) - might be usefull
+     */
+    throw new ErrorResponseException("Invalid API response.");
   }
 
 }

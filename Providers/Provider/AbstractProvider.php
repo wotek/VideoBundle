@@ -21,7 +21,7 @@ abstract class AbstractProvider implements ProviderInterface
   /**
    * @return Guzzle\Service\Client
    */
-  abstract public function getClient();
+  abstract protected function getClient();
 
   /**
    * @return array

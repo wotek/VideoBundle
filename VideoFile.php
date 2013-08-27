@@ -47,4 +47,20 @@ class VideoFile extends File
   {
     return $this->description;
   }
+
+  /**
+   * @return boolean
+   */
+  public function hasTitle()
+  {
+    return null !== $this->title;
+  }
+
+  /**
+   * @return boolean
+   */
+  public function hasDescription()
+  {
+    return null !== $this->description;
+  }
 }

@@ -94,12 +94,14 @@ class Vimeo extends AbstractProvider {
      */
     $video_id = $client->complete($ticket_id, $file->getFilename());
 
-    if($file->getTitle()){
-      $client->setTitle($video_id, $file->getTitle());
+    if($file->hasTitle())
+    {
+      $this->setTitle($video_id, $file->getTitle());
     }
 
-    if($file->getDescription()){
-      $client->setDescription($video_id, $file->getDescription());
+    if($file->hasDescription())
+    {
+      $this->setDescription($video_id, $file->getDescription());
     }
 
     return $video_id;
@@ -140,11 +142,10 @@ class Vimeo extends AbstractProvider {
   }
 
   /**
-   * @return Wtk\VideoBundle\Providers\Provider\Client\Vimeo
    *
-   * @todo Should be protected, is public for verbose purposes only.
+   * @return Wtk\VideoBundle\Providers\Provider\Client\Vimeo
    */
-  public function getClient()
+  protected function getClient()
   {
     return VimeoClient::factory($this->getConfig());
   }
