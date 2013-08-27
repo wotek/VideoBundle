@@ -72,9 +72,9 @@ Example:
 
 Bundle provides (only) command line interface to manage video uploads.
 
-## Available commands:
+#### Available commands:
 
-# Movie upload
+##### Movie upload
 
     movies:upload [--provider="..."] [--path="..."] [--title[="..."]] [--description[="..."]]
 
@@ -97,7 +97,7 @@ Example usage:
     File id: 73208538 uploaded.
 
 
-# List uploaded movies
+##### List uploaded movies
 
     movies:list
 
