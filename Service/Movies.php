@@ -5,7 +5,9 @@ use Wtk\VideoBundle\VideoFile;
 use Wtk\VideoBundle\Entity\Movie\RepositoryInterface;
 use Wtk\VideoBundle\Providers\Factory as ProviderFactory;
 use Wtk\VideoBundle\Entity\Movie;
-
+/**
+ * @author wzalewski
+ */
 class Movies {
   /**
    * @var ProviderFactory
@@ -28,18 +30,31 @@ class Movies {
   }
 
   /**
-   * Uploads file
+   * Uploads file using given provider
    *
-   * @param  VideoFile     $file
    * @param  string        $provider
+   * @param  VideoFile     $file
+   *
+   * @return int           Video id
    */
   public function upload($provider, VideoFile $file)
   {
     /**
+     * Make it possible to inject provider by-passing factory.
+     *
+     * @todo  : This is a entry point for getting rid of duplicated code
+     *          in MoviesCommand.
+     */
+    if(! $provider instanceof ProviderInterface)
+    {
+      $provider = $this->getProvider($provider);
+    }
+
+    /**
      * Check if given file exists in DB
      */
 
-    $provider = $this->getProvider($provider);
+
     return $provider->upload($file);
   }
 

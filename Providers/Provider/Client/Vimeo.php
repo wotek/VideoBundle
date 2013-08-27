@@ -53,7 +53,11 @@ class Vimeo extends Client {
         $file->getSize()
       )
     );
-    $body->getEventDispatcher()->addListener('body.read', $callback);
+
+    if($callback)
+    {
+      $body->getEventDispatcher()->addListener('body.read', $callback);
+    }
 
     $request = $this->put($endpoint, null, $body);
     $request->setHeader('Content-Type', $file->getMimeType());
@@ -243,6 +247,46 @@ class Vimeo extends Client {
     }
 
     return false;
+  }
+
+  public function setTitle($video_id, $title)
+  {
+    $command = $this->getCommand('setTitle',
+      array(
+        'video_id' => $video_id,
+        'title' => $title
+      )
+    );
+    $command->execute();
+
+    $response = $command->getResponse();
+
+    if($response->isSuccessful())
+    {
+      return true;
+    }
+
+    return $this->handleError($response);
+  }
+
+  public function setVideoDescription($video_id, $description)
+  {
+    $command = $this->getCommand('setDescription',
+      array(
+        'video_id' => $video_id,
+        'description' => $description
+      )
+    );
+    $command->execute();
+
+    $response = $command->getResponse();
+
+    if($response->isSuccessful())
+    {
+      return true;
+    }
+
+    return $this->handleError($response);
   }
 
   /**

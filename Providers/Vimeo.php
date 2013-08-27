@@ -5,12 +5,15 @@ use Wtk\VideoBundle\Providers\Provider\AbstractProvider;
 use Wtk\VideoBundle\Providers\Provider\Client\Vimeo as VimeoClient;
 use Wtk\VideoBundle\VideoFile;
 use Wtk\VideoBundle\Providers\Provider\Exception as ProviderException;
-
+/**
+ * @author wzalewski
+ */
 class Vimeo extends AbstractProvider {
   /**
    * Retrieve data about movie with give id
    *
    * @param  string $id
+   *
    * @return array
    */
   public function get($id)
@@ -21,50 +24,87 @@ class Vimeo extends AbstractProvider {
   /**
    * @param int     $id
    * @param string  $title
+   *
+   * @return bool
    */
   public function setTitle($id, $title)
   {
-    $this->getClient()->setTitle($id, $title);
+    return $this->getClient()->setTitle($id, $title);
   }
 
   /**
    * @param int     $id
    * @param string  $description
+   *
+   * @return bool
    */
   public function setDescription($id, $description)
   {
-    $this->getClient()->setDescription($id, $description);
+    return $this->getClient()->setVideoDescription($id, $description);
   }
 
   /**
    * Uploads video to Vimeo
    *
    * @param  VideoFile $file
+   * @throws ProviderException
+   *
+   * @return integer Uploaded video id
    */
   public function upload(VideoFile $file)
   {
-    $this->log(
-      sprintf("Uploading file %s ...", $file->getFilename())
-    );
-
     $client = $this->getClient();
     /**
      * 1. Check user quota
      */
-    $this->log("Receiving quota information from API..");
-
-    $quota = $client->getQuota();
-
-    if($file->getSize() > $freespace = $quota['free'])
+    if(false === $this->hasEnoughFreeSpace($file->getSize()))
     {
       throw new ProviderException(
-        "Cannot upload given file. Maximum allowed file size is: $freespace"
+        "Cannot upload given file. Not enough space."
       );
     }
+
     /**
      * 2. Get an upload ticket
      */
-    $this->log("Fetching upload ticket");
+    list($ticket_id, $endpoint) = $this->getTicket();
+
+    /**
+     * 3. Transfer video data
+     */
+    $is_success = $client->upload($endpoint, $file);
+
+    if(false === $is_success)
+    {
+      throw new ProviderException("File upload failed");
+    }
+
+    /**
+     * 4. Verfiy upload
+     */
+    $verified = $client->verify($endpoint, $file);
+
+    if(false === $verified)
+    {
+      throw new ProviderException("Cannot verify uploaded file.");
+    }
+
+    /**
+     * 5. Complete process
+     */
+    $video_id = $client->complete($ticket_id, $file->getFilename());
+
+    return $video_id;
+  }
+
+  /**
+   * Get upload ticket
+   *
+   * @return array
+   */
+  protected function getTicket()
+  {
+    $client = $this->getClient();
 
     $ticket = $client->getTicket();
 
@@ -75,56 +115,28 @@ class Vimeo extends AbstractProvider {
       );
     }
 
-    $this->log(sprintf("Got ticket: %s", $ticket['id']));
+    return array($ticket['id'], $ticket['endpoint'],);
+  }
 
-    /**
-     * 3. Transfer video data
-     */
-    $this->log("Starting file upload...");
+  /**
+   * Check if we can even upload file about this size
+   *
+   * @param  int  $required    Required space for file
+   * @return boolean
+   */
+  protected function hasEnoughFreeSpace($required)
+  {
+    $quota = $this->getClient()->getQuota();
 
-    $progress_callback = null;
-    if($this->progress)
-    {
-      $helper = $this->progress;
-      $progress_callback = function($event) use ($helper)
-      {
-        // We'll get > 100%. EntityBody payload. Dont worry ;)
-        $helper->advance($event['length']);
-      };
-    }
-
-    $is_success = $client->upload($ticket['endpoint'], $file, $progress_callback);
-    /**
-     * Succeess upload video id: 73084036
-     */
-    /**
-     * 4. Verfiy upload
-     */
-    $verified = $client->verify($ticket['endpoint'], $file);
-    $this->log(sprintf("Upload verified?: %s", $verified ? 'Yes' : 'No'));
-
-    if($is_success & $verified)
-    {
-      /**
-       * 5. Complete process
-       */
-      $video_id = $client->complete($ticket['id'], $file->getFilename());
-      $this->log(sprintf("Uploaded video id : %d", $video_id));
-    }
-    else
-    {
-      throw new ProviderException(
-        "Could not verify uploaded file or upload failed. \nResuming upload currently not implemented. Sorry."
-      );
-    }
-
-    return $video_id;
+    return $required < $quota['free'];
   }
 
   /**
    * @return Wtk\VideoBundle\Providers\Provider\Client\Vimeo
+   *
+   * @todo Should be protected, is public for verbose purposes only.
    */
-  protected function getClient()
+  public function getClient()
   {
     return VimeoClient::factory($this->getConfig());
   }

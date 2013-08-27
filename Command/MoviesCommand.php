@@ -8,12 +8,11 @@ use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 
 use Wtk\VideoBundle\Entity\Movie;
-use Wtk\VideoBundle\Providers\Factory as ProviderFactory;
+use Wtk\VideoBundle\Providers\Provider\ProviderInterface;
 use Wtk\VideoBundle\VideoFile;
 
 use Symfony\Component\Validator\Validation;
 use Symfony\Component\Validator\Constraints as Assert;
-
 
 class MoviesCommand extends ContainerAwareCommand
 {
@@ -21,6 +20,11 @@ class MoviesCommand extends ContainerAwareCommand
   const OPTION_PATH = 'path';
   const OPTION_TITLE = 'title';
   const OPTION_DESCRIPTION = 'description';
+
+  /**
+   * @var OutputInterface
+   */
+  protected $output;
 
   /**
    * @return void
@@ -64,6 +68,7 @@ class MoviesCommand extends ContainerAwareCommand
    */
   protected function execute(InputInterface $input, OutputInterface $output)
   {
+    $this->output = $output;
     /**
      * @var Wtk\VideoBundle\Service\Movies
      */
@@ -84,20 +89,123 @@ class MoviesCommand extends ContainerAwareCommand
 
     $file = new VideoFile($filepath);
 
-    $progress = $this->getHelperSet()
-                ->get('progress');
-    $progress->start($output, $file->getSize());
     /**
-     * For verbose purposes only.
-     * @todo: Add verbose option
+     * Set file title & description.
+     * Provider will discover that file has title & description provided.
+     * If so. Will notify remote API.
      */
-    ProviderFactory::registerLogger($output);
-    ProviderFactory::registerProgressHelper($progress);
+    $file->setTitle($input->getOption(self::OPTION_TITLE));
+    $file->setDescription($input->getOption(self::OPTION_DESCRIPTION));
+
+    // $this->progress = $this->getHelperSet()->get('progress');
+    // $this->progress->start($output, $file->getSize());
+    // $this->upload($service->getProvider($provider), $file);
+
+    $this->log(
+      sprintf(
+        "Uploading %s this might take a while. Hold on. Go get a coffe",
+        $file->getFilename()
+      )
+    );
+    $video_id = $service->upload($provider, $file);
+    $this->log("File id: $video_id uploaded.");
+  }
+
+  /**
+   * This method is not actually needed. You could simply use
+   * service method to upload file.
+   *
+   * For verbosity & debugging reasons
+   * the code is duplicated here to take advantage of
+   * Command output interface & helpers.
+   *
+   * @param  ProviderInterface     $provider
+   * @param  VideoFile             $file
+   * @return int
+   */
+  protected function upload(ProviderInterface $provider, VideoFile $file)
+  {
+    $this->log(
+      sprintf("Uploading file %s ...", $file->getFilename())
+    );
+
+    $client = $provider->getClient();
+    /**
+     * 1. Check user quota
+     */
+    $this->log("Receiving quota information from API..");
+
+    $quota = $client->getQuota();
+
+    if($file->getSize() > $freespace = $quota['free'])
+    {
+      throw new ProviderException(
+        "Cannot upload given file. Maximum allowed file size is: $freespace"
+      );
+    }
+    /**
+     * 2. Get an upload ticket
+     */
+    $this->log("Fetching upload ticket");
+
+    $ticket = $client->getTicket();
+
+    if(false == $client->checkTicket($ticket['id']))
+    {
+      throw new ProviderException(
+        sprintf("Ticket %s has expired.", $ticket['id'])
+      );
+    }
+
+    $this->log(sprintf("Got ticket: %s", $ticket['id']));
 
     /**
-     * Upload file using $provider
+     * 3. Transfer video data
      */
-    $service->upload($provider, $file);
+    $this->log("Starting file upload...");
+
+    $progress_callback = null;
+    // if($this->progress)
+    // {
+    //   $helper = $this->progress;
+    //   $progress_callback = function($event) use ($helper)
+    //   {
+    //     // We'll get > 100%. EntityBody payload. Dont worry ;)
+    //     $helper->advance($event['length']);
+    //   };
+    // }
+
+    $is_success = $client->upload($ticket['endpoint'], $file, $progress_callback);
+
+    if(false === $is_success)
+    {
+      throw new ProviderException("File upload failed");
+    }
+
+    /**
+     * 4. Verfiy upload
+     */
+    $verified = $client->verify($ticket['endpoint'], $file);
+    $this->log(sprintf("Upload verified?: %s", $verified ? 'Yes' : 'No'));
+
+    if(false === $verified)
+    {
+      throw new ProviderException("Cannot verify uploaded file.");
+    }
+
+    $video_id = (int) $client->complete($ticket['id'], $file->getFilename());
+
+    $this->log(sprintf("Uploaded video id : %d", $video_id));
+
+    if($file->getTitle()){
+      $provider->setTitle($video_id, $file->getTitle());
+    }
+
+    if($file->getDescription()){
+      $provider->setDescription($video_id, $file->getDescription());
+    }
+
+    return $video_id;
   }
 
   /**
@@ -139,12 +247,20 @@ class MoviesCommand extends ContainerAwareCommand
 
   /**
    * Helper
-   * @param  OutputInterface $output
    * @param  string          $message
    * @return void
    */
-  protected function error(OutputInterface $output, $message)
+  protected function error($message)
   {
-    $output->writeln(sprintf('<error>%s</error>', $message));
+    $this->output->writeln(sprintf('<error>%s</error>', $message));
+  }
+
+  /**
+   * @param  string $message
+   * @return void
+   */
+  protected function log($message)
+  {
+    $this->output->writeln(sprintf("<info>%s</info>", $message));
   }
 }
