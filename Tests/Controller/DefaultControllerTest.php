@@ -2,7 +2,7 @@
 
 namespace Wtk\VideoBundle\Tests\Controller;
 
-class DefaultControllerTest extends \PHPUnit_TestCase
+class DefaultControllerTest extends \PHPUnit_Framework_TestCase
 {
   public function testFoo()
   {
