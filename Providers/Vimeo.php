@@ -94,6 +94,14 @@ class Vimeo extends AbstractProvider {
      */
     $video_id = $client->complete($ticket_id, $file->getFilename());
 
+    if($file->getTitle()){
+      $client->setTitle($video_id, $file->getTitle());
+    }
+
+    if($file->getDescription()){
+      $client->setDescription($video_id, $file->getDescription());
+    }
+
     return $video_id;
   }
 

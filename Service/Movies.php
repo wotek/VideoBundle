@@ -41,11 +41,8 @@ class Movies {
   {
     /**
      * Make it possible to inject provider by-passing factory.
-     *
-     * @todo  : This is a entry point for getting rid of duplicated code
-     *          in MoviesCommand.
      */
-    if(! $provider instanceof ProviderInterface)
+    if(!$provider instanceof ProviderInterface)
     {
       $provider = $this->getProvider($provider);
     }

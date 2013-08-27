@@ -97,9 +97,13 @@ class MoviesCommand extends ContainerAwareCommand
     $file->setTitle($input->getOption(self::OPTION_TITLE));
     $file->setDescription($input->getOption(self::OPTION_DESCRIPTION));
 
-    // $this->progress = $this->getHelperSet()->get('progress');
-    // $this->progress->start($output, $file->getSize());
-    // $this->upload($service->getProvider($provider), $file);
+    /**
+     * Idea: What if provider implemented EventDispatcherInterface
+     * and might want to notify what's he up to right now?
+     *
+     * @todo : Make IoEmittingVimeo provider. This is the cleanest way to
+     *         implement verbosity without making code look like crap.
+     */
 
     $this->log(
       sprintf(
@@ -107,105 +111,10 @@ class MoviesCommand extends ContainerAwareCommand
         $file->getFilename()
       )
     );
+
     $video_id = $service->upload($provider, $file);
+
     $this->log("File id: $video_id uploaded.");
-  }
-
-  /**
-   * This method is not actually needed. You could simply use
-   * service method to upload file.
-   *
-   * For verbosity & debugging reasons
-   * the code is duplicated here to take advantage of
-   * Command output interface & helpers.
-   *
-   * @param  ProviderInterface     $provider
-   * @param  VideoFile             $file
-   * @return int
-   */
-  protected function upload(ProviderInterface $provider, VideoFile $file)
-  {
-    $this->log(
-      sprintf("Uploading file %s ...", $file->getFilename())
-    );
-
-    $client = $provider->getClient();
-    /**
-     * 1. Check user quota
-     */
-    $this->log("Receiving quota information from API..");
-
-    $quota = $client->getQuota();
-
-    if($file->getSize() > $freespace = $quota['free'])
-    {
-      throw new ProviderException(
-        "Cannot upload given file. Maximum allowed file size is: $freespace"
-      );
-    }
-    /**
-     * 2. Get an upload ticket
-     */
-    $this->log("Fetching upload ticket");
-
-    $ticket = $client->getTicket();
-
-    if(false == $client->checkTicket($ticket['id']))
-    {
-      throw new ProviderException(
-        sprintf("Ticket %s has expired.", $ticket['id'])
-      );
-    }
-
-    $this->log(sprintf("Got ticket: %s", $ticket['id']));
-
-    /**
-     * 3. Transfer video data
-     */
-    $this->log("Starting file upload...");
-
-    $progress_callback = null;
-    // if($this->progress)
-    // {
-    //   $helper = $this->progress;
-    //   $progress_callback = function($event) use ($helper)
-    //   {
-    //     // We'll get > 100%. EntityBody payload. Dont worry ;)
-    //     $helper->advance($event['length']);
-    //   };
-    // }
-
-    $is_success = $client->upload($ticket['endpoint'], $file, $progress_callback);
-
-    if(false === $is_success)
-    {
-      throw new ProviderException("File upload failed");
-    }
-
-    /**
-     * 4. Verfiy upload
-     */
-    $verified = $client->verify($ticket['endpoint'], $file);
-    $this->log(sprintf("Upload verified?: %s", $verified ? 'Yes' : 'No'));
-
-    if(false === $verified)
-    {
-      throw new ProviderException("Cannot verify uploaded file.");
-    }
-
-    $video_id = (int) $client->complete($ticket['id'], $file->getFilename());
-
-    $this->log(sprintf("Uploaded video id : %d", $video_id));
-
-    if($file->getTitle()){
-      $provider->setTitle($video_id, $file->getTitle());
-    }
-
-    if($file->getDescription()){
-      $provider->setDescription($video_id, $file->getDescription());
-    }
-
-    return $video_id;
   }
 
   /**

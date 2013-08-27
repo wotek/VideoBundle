@@ -45,19 +45,11 @@ class Vimeo extends Client {
    * @param  VideoFile   $file
    * @return bool
    */
-  public function upload($endpoint, VideoFile $file, \Closure $callback = null)
+  public function upload($endpoint, VideoFile $file)
   {
-    $body = new IoEmittingEntityBody(
-      EntityBody::factory(
-        fopen($file->getRealPath(), 'r'),
-        $file->getSize()
-      )
+    $body = EntityBody::factory(
+      fopen($file->getRealPath(), 'r'), $file->getSize()
     );
-
-    if($callback)
-    {
-      $body->getEventDispatcher()->addListener('body.read', $callback);
-    }
 
     $request = $this->put($endpoint, null, $body);
     $request->setHeader('Content-Type', $file->getMimeType());
