@@ -18,6 +18,10 @@ http://getcomposer.org/ or just run the following command:
     # Composer will automaticaly download & install & modify your composer.json
     composer require guzzle/guzzle:~3.7
 
+### Install VideoBundle
+
+    composer install wotek/video-bundle
+
 2) Configuration
 ----------------------------------
 
@@ -48,7 +52,7 @@ Create database tables:
 
 ### Providers
 
-By now bundle supports YouTube and Vimeo API's.
+By for now bundle supports only Vimeo API.
 You need to configure access to API in `app/config/config.yml` configuration file.
 
 Example:
@@ -60,6 +64,59 @@ Example:
               consumer_key:       API Consumer Key
               token:              Token
               token_secret:       Token secret
+
+3) Usage
+----------------------------------
+
+### Command line
+
+Bundle provides (only) command line interface to manage video uploads.
+
+## Available commands:
+
+# Movie upload
+
+    movies:upload [--provider="..."] [--path="..."] [--title[="..."]] [--description[="..."]]
+
+    Options:
+     --provider            Provider name
+     --path                Path to file
+     --title               Uploaded video title
+     --description         Video description
+
+Currently there is not verbose information when file is being uploaded.
+
+Example usage:
+
+    $ app/console movies:upload --path=tofik.mov \
+    --title="Tofik" \
+    --description="Tofik is just jumping around" \
+    --provider=vimeo
+
+    Uploading tofik.mov this might take a while. Hold on. Go get a coffee
+    File id: 73208538 uploaded.
+
+
+# List uploaded movies
+
+    movies:list
+
+    Outputs:
+
+    +----+----------+----------------------------------+----------+-----------+
+    | ID | RemoteID | Checksum                         | Provider | Completed |
+    +----+----------+----------------------------------+----------+-----------+
+    | 1  | 73206060 | 92513815a44ea80099f46bf8a871cd62 | vimeo    | 1         |
+    | 2  | 73208538 | 445df168c31e07ef806c788f8420e1fa | vimeo    | 1         |
+    +----+----------+----------------------------------+----------+-----------+
+
+
+
+
+
+
+
+
 
 
 

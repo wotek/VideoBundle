@@ -67,6 +67,8 @@ class Movies {
     $movie->setCompleted();
 
     $this->save($movie);
+
+    return $remote_id;
   }
 
   /**
