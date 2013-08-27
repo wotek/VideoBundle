@@ -1,26 +1,29 @@
 VideoBundle
 ----------------------------------
 
+[![Build Status](https://travis-ci.org/wotek/VideoBundle.png?branch=master)](https://travis-ci.org/wotek/VideoBundle)
+
 VideoBundle is a result of me learning Symfony2 Framework.
 I do hope you find it useful.
 
-### Features
+**Features:**
 
 * Uploads video through provider API
 * Keeps track of uploaded files
 
-### Supported API's
+**Supported API's:**
 
 * Vimeo
-* Youtube [incoming]
 
-### Todo
+** There is a lot to do:**
 
 * Youtube API
 * 100% test coverage
 
 1) Requirements
 ----------------------------------
+
+Bundle **heavily** depends on great REST client library Guzzle.
 
 * Guzzle (@see https://github.com/guzzle/guzzle)
 
