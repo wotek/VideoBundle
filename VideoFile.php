@@ -63,4 +63,14 @@ class VideoFile extends File
   {
     return null !== $this->description;
   }
+
+  /**
+   * Returns file md5 checksum
+   *
+   * @return string
+   */
+  public function getChecksum()
+  {
+    return md5_file($this->getRealPath());
+  }
 }

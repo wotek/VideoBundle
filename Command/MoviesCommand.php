@@ -108,7 +108,7 @@ class MoviesCommand extends ContainerAwareCommand
      *         without making code look like crap.
      */
     $this->log(sprintf(
-        "Uploading %s this might take a while. Hold on. Go get a coffe",
+        "Uploading %s this might take a while. Hold on. Go get a coffee",
         $file->getFilename())
     );
 

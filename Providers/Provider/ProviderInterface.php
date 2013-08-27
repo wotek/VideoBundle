@@ -8,4 +8,5 @@ interface ProviderInterface {
   function get($id);
   function setTitle($id, $title);
   function setDescription($id, $description);
+  function getId();
 }

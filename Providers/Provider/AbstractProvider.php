@@ -31,4 +31,15 @@ abstract class AbstractProvider implements ProviderInterface
     return $this->config;
   }
 
+  /**
+   * Returns provider Id
+   *
+   * @return string
+   */
+  public function getId()
+  {
+    $mua = new \ReflectionClass($this);
+    return strtolower($mua->getShortName());
+  }
+
 }

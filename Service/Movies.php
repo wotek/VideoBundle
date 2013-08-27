@@ -47,12 +47,26 @@ class Movies {
       $provider = $this->getProvider($provider);
     }
 
-    /**
-     * Check if given file exists in DB
-     */
+    if($this->getByChecksum($file->getChecksum()))
+    {
+      throw new Exception(
+        "Duplicated file. File with the same checksum already exists"
+      );
+    }
 
+    $movie = new Movie;
 
-    return $provider->upload($file);
+    $movie->setProvider($provider->getId());
+    $movie->setChecksum($file->getChecksum());
+
+    $this->save($movie);
+
+    $remote_id = $provider->upload($file);
+
+    $movie->setRemoteId($remote_id);
+    $movie->setCompleted();
+
+    $this->save($movie);
   }
 
   /**
@@ -69,14 +83,19 @@ class Movies {
   }
 
   /**
-   * Return movie object
+   * Get movie(s)
    *
    * @param  int $movie_id
    * @return Movie|null
    */
-  public function getById($movie_id)
+  public function get($movie_id = null)
   {
-    return $this->getRepository()->find($movie_id);
+    if(null !== $movie_id)
+    {
+      return $this->getRepository()->find($movie_id);
+    }
+
+    return $this->getRepository()->findAll();
   }
 
   /**

@@ -31,9 +31,9 @@ class Movie {
   /**
    * @var integer
    *
-   * @ORM\Column(name="remote_id", type="integer")
+   * @ORM\Column(name="remote_id", type="integer", nullable=true)
    */
-  private $remoteId;
+  private $remoteId = null;
 
   /**
    * md5_file checksum from uploaded file
@@ -52,6 +52,13 @@ class Movie {
    * @ORM\Column(name="provider", type="string", length=32)
    */
   private $provider;
+
+  /**
+   * @var boolean
+   *
+   * @ORM\Column(name="is_completed", type="boolean", options={"default" = 0})
+   */
+  private $is_completed = false;
 
 
   /**
@@ -131,5 +138,21 @@ class Movie {
   public function getProvider()
   {
     return $this->provider;
+  }
+
+  /**
+   * @param boolean $flag
+   */
+  public function setCompleted($flag = true)
+  {
+    $this->is_completed = (bool) $flag;
+  }
+
+  /**
+   * @return boolean
+   */
+  public function getIsCompleted()
+  {
+    return $this->is_completed;
   }
 }
