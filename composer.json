@@ -11,7 +11,9 @@
         "symfony/symfony": ">=2.1,<2.4-dev"
     },
     "require-dev": {
-        "guzzle/guzzle": "~3.7"
+        "guzzle/guzzle": "~3.7",
+        "symfony/symfony": ">=2.1,<2.4-dev",
+        "phpunit/phpunit": "3.7.*"
     },
     "authors": [
         {

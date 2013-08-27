@@ -3,7 +3,7 @@ namespace Wtk\VideoBundle\Providers;
 /**
  * @author wzalewski
  */
-class Factory {
+class Factory implements FactoryInterface {
   /**
    * Available providers
    *

@@ -3,14 +3,14 @@ namespace Wtk\VideoBundle\Service;
 
 use Wtk\VideoBundle\VideoFile;
 use Wtk\VideoBundle\Entity\Movie\RepositoryInterface;
-use Wtk\VideoBundle\Providers\Factory as ProviderFactory;
+use Wtk\VideoBundle\Providers\FactoryInterface;
 use Wtk\VideoBundle\Entity\Movie;
 /**
  * @author wzalewski
  */
 class Movies {
   /**
-   * @var ProviderFactory
+   * @var FactoryInterface
    */
   protected $providers;
 
@@ -22,9 +22,9 @@ class Movies {
 
   /**
    * @param RepositoryInterface $repository
-   * @param ProviderFactory     $providers
+   * @param FactoryInterface    $providers
    */
-  public function __construct(RepositoryInterface $repository, ProviderFactory $providers) {
+  public function __construct(RepositoryInterface $repository, FactoryInterface $providers) {
     $this->repository = $repository;
     $this->providers = $providers;
   }
@@ -54,7 +54,7 @@ class Movies {
       );
     }
 
-    $movie = new Movie;
+    $movie = $this->getMovie();
 
     $movie->setProvider($provider->getId());
     $movie->setChecksum($file->getChecksum());
@@ -69,6 +69,16 @@ class Movies {
     $this->save($movie);
 
     return $remote_id;
+  }
+
+  /**
+   * Creates new movie instance
+   *
+   * @return Movie
+   */
+  protected function getMovie()
+  {
+    return new Movie;
   }
 
   /**
