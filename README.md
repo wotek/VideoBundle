@@ -15,7 +15,7 @@ I do hope you find it useful.
 
 * Vimeo
 
-** There is a lot to do:**
+**There is a lot to do:**
 
 * Youtube API
 * 100% test coverage
@@ -74,7 +74,7 @@ Create database tables:
 
 ### Providers
 
-By for now bundle supports only Vimeo API.
+For now bundle consumes only Vimeo API.
 You need to configure access to API in `app/config/config.yml` configuration file.
 
 Example:
@@ -96,13 +96,15 @@ Bundle provides (only) command line interface to manage video uploads.
 
 ##### Movie upload
 
+Uploads given file using configured providers.
+
     movies:upload [--provider="..."] [--path="..."] [--title[="..."]] [--description[="..."]]
 
     Options:
      --provider            Provider name
      --path                Path to file
-     --title               Uploaded video title
-     --description         Video description
+     --title               Uploaded video title (optional)
+     --description         Video description (optional)
 
 Currently there is not verbose information when file is being uploaded.
 
@@ -119,7 +121,12 @@ Example usage:
 
 ##### List uploaded movies
 
+Lists all uploaded movies.
+
     movies:list
+
+    Options:
+     None
 
     Outputs:
 
@@ -131,10 +138,26 @@ Example usage:
     +----+----------+----------------------------------+----------+-----------+
 
 
+##### Get movie details
 
+Retrieves movie details from API.
 
+    Usage:
+     movies:details [--provider="..."] [--id="..."]
 
+    Options:
+     --provider            Provider name
+     --id                  Movie id
 
+    Outputs:
+
+    +--------------------+-----------+
+    | Property           | Value     |
+    +--------------------+-----------+
+    | generated_in       | 0.0165    |
+    +--------------------+-----------+
+    | [ ... ]            | [ ... ]   |
+    +--------------------+-----------+
 
 
 
